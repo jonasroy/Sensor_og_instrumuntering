@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.signal as signal
-#import xcorr
 from scipy.fft import fft, ifft, fftfreq
 
 #Made by Jonas Gjendem Røysland and Sondre Olimb
@@ -75,8 +74,38 @@ def plot_spectrum(plots = 1):
     axs[4].set_xlabel("Frekvens[Hz]")
     axs.show()
 
+
+
+def plot_frequncy_response():
+    freq_respons = np.loadtxt("/Users/jonasroysland/Documents/NTNU Vår 2021/Sensor og instrumentering/Frekvensrespons filter nedre 3.txt")
+
+    freq_low = []
+    c1_low = []
+    c2_low = []
+    for i in range(0, len(freq_respons_low)):
+        freq_low.append(freq_respons_low[i][0])
+        c1_low.append(freq_respons_low[i][1])
+        c2_low.append(freq_respons_low[i][2])
+        
+    plt.semilogx(freq_low[:50],c2_low[:50], color = 'blue', label = '3.3V ut (Kanal 2)')
+    c1_copy =  np.array(freq_low, dtype='int')
+
+    print(c1_copy)
+
+    plt.scatter(6.5,-3,color="blue", label = 'Knekkfrekvens (-3, 6.5)')
+    plt.xlabel("Frekvens [Hz]")
+    plt.ylabel("Størrelse[dB]")
+    plt.title("Frekvensrespons")
+    plt.grid()
+    plt.legend()
+    plt.show()
+    
 #plot_voltage(5)
 #plot_spectrum(5)
-#linear_test
+#linear_test()
+#plot_frequncy_response()
+   
+
+
 
 
