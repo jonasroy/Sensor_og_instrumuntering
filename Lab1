@@ -1,0 +1,82 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import scipy.signal as signal
+#import xcorr
+from scipy.fft import fft, ifft, fftfreq
+
+#Made by Jonas Gjendem Røysland and Sondre Olimb
+
+def raspi_import(path, channels=5):
+    """
+    Import data produced using adc_sampler.c.
+    Returns sample period and ndarray with one column per channel.
+    Sampled data for each channel, in dimensions NUM_SAMPLES x NUM_CHANNELS.
+    """
+
+    with open(path, 'r') as fid:
+        sample_period = np.fromfile(fid, count=1, dtype=float)[0]
+        data = np.fromfile(fid, dtype=np.uint16)
+        data = data.reshape((-1, channels))
+    return sample_period, data
+
+sample_periodv, datav = raspi_import('/Users/jonasroysland/Documents/NTNU Vår 2021/Sensor og instrumentering/Samme_spenning13.bin')
+data = []
+sample_period = 0
+datam = []
+for i in range(0,5):
+    sample_period,data = raspi_import('/Users/jonasroysland/Documents/NTNU Vår 2021/Sensor og instrumentering/frekvens'+ str(i+1) +'.bin')
+    datam.append(data[:,0])
+
+for i in range(0,10):
+    sample_period_linear,data_linear = raspi_import('/Users/jonasroysland/Documents/NTNU Vår 2021/Sensor og instrumentering/Data' + str(i + 1) + '.bin')
+
+
+def plot_voltage(plots = 1):
+    fig, axs = plt.subplots(5, figsize=(10, 12))
+    axs[0].set_title("Spenningene over tid i de 5 kanals ADCene.")
+    for i in range(0,plots):
+        axs[i].plot(np.linspace(0,1,len(datav[:,i][20:])),3.3*datav[:,i][20:]/2**12)
+        axs[i].set_ylabel("Spenning[V]")
+        voltage = round(np.mean(3.3*datav[:,i][20:]/2**12),3)
+        axs[i].text(0.6,voltage - voltage/50,str(voltage) + " V", fontsize='x-large')
+        axs[i].text(0.4, voltage - voltage/50, "ADC " + str(i+1) , fontsize='x-large', color="red")
+        axs[i].set_ylim(voltage-voltage/20, voltage + voltage/20)
+    axs[4].set_xlabel("Tid[s]")
+    axs.show()
+
+def linear_test():
+    m = []
+    for i in range(0,10):
+        voltage = round(np.mean(3.3 * data_linear[:, i][20:] / 2 ** 12), 3)
+        m.append(voltage)
+    print(m)
+
+
+def plot_spectrum(plots = 1):
+    fig, axs = plt.subplots(plots,figsize=(7, 9))
+    for i in range(0, plots):
+        signal = datam[i]
+        spectrum = fft(signal)
+        freq = fftfreq(len(spectrum))
+        # Removes the frequency at 0Hz
+        threshold = 0.5 * np.max(np.abs(spectrum))
+        mask = np.abs(spectrum) > threshold
+        spectrum[mask] = 0
+        # Finding the frequency
+        threshold = 0.5 * np.max(np.abs(spectrum))
+        mask = np.abs(spectrum) > threshold
+        peaks = freq[mask]
+        frequency = peaks * 1e6/sample_period
+        #Plots the spectrums
+        axs[i].plot(freq * 1e6 / sample_period, np.abs(spectrum))
+        axs[i].set_xlim(frequency[0] + frequency[0] // 2, frequency[1] + frequency[1] // 2)
+        axs[i].set_ylabel("Spektrum[dB]")
+        axs[i].text(frequency[0] - frequency[0] //4 ,2.5*1e7,str(int(round(peaks[0]*1e6 / sample_period,0))) + ' Hz')
+    axs[4].set_xlabel("Frekvens[Hz]")
+    axs.show()
+
+#plot_voltage(5)
+#plot_spectrum(5)
+#linear_test
+
+
